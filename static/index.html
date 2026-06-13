@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Born First?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:    #E63946;
+      --yellow: #FFD60A;
+      --blue:   #1D6FA4;
+      --green:  #4CAF50;
+      --cream:  #FFF8E7;
+      --ink:    #1a1a2e;
+      --muted:  #6b7280;
+      --white:  #FFFFFF;
+      --radius: 20px;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--cream);
+      font-family: 'Nunito', sans-serif;
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+}
+
+  
+
+    /* ── LANDING STACK ── */
+    #landing {
+    position: relative;
+    width: 100vw;
+    max-width: 100vw;
+    height: 92vh;
+    margin: 0 auto;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+    .stack-card {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    border: 2.5px solid var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 80px;
+    transform-origin: bottom center;
+    will-change: transform, opacity;
+}
+
+    /* blank cards — highest z-index so they peel first */
+    .stack-card:nth-child(1) {
+      background: #fde8d0;
+      transform: rotate(-4deg) translateY(12px) scale(0.97);
+      z-index: 4;
+    }
+
+    .stack-card:nth-child(2) {
+      background: #fdf0c0;
+      transform: rotate(3deg) translateY(8px) scale(0.98);
+      z-index: 3;
+    }
+
+    .stack-card:nth-child(3) {
+      background: #d0e8fd;
+      transform: rotate(-2deg) translateY(4px) scale(0.99);
+      z-index: 2;
+    }
+
+    /* main card — lowest, revealed last */
+    .stack-card.main-card {
+      background: var(--white);
+      transform: rotate(0deg) translateY(0px) scale(1);
+      z-index: 1;
+      box-shadow: 6px 6px 0 var(--ink);
+    }
+
+    .stack-card.main-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 8px;
+      background: var(--red);
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    @keyframes peel-off {
+      0%   { transform: rotate(0deg) translateY(0) scale(1); opacity: 1; }
+      40%  { transform: rotate(-8deg) translateY(-60px) scale(1.02); opacity: 1; }
+      100% { transform: rotate(-15deg) translateY(-140%) scale(0.9); opacity: 0; }
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal-btn { animation: fade-up 0.5s cubic-bezier(.4,0,.2,1) forwards; }
+
+    /* landing text */
+    .landing-emoji { font-size: 4.5rem; margin-bottom: 16px; display: block; }
+
+    .landing-title {
+  font-family: 'Bangers', cursive;
+  font-size: 5rem;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  margin-bottom: 14px;
+  text-align: center;
+  line-height: 1.05;
+}
+
+.landing-sub {
+  color: var(--muted);
+  font-size: 1.15rem;
+  line-height: 1.65;
+  margin-bottom: 32px;
+  font-weight: 600;
+  text-align: center;
+  max-width: 560px;
+}
+
+    .landing-sub {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.65;
+      margin-bottom: 28px;
+      font-weight: 600;
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; justify-content: center; }
+
+    .badge {
+      border-radius: 99px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      border: 2px solid var(--ink);
+    }
+
+    .badge-red    { background: var(--red);    color: white; }
+    .badge-yellow { background: var(--yellow); color: var(--ink); }
+    .badge-blue   { background: var(--blue);   color: white; }
+
+    /* ── QUIZ SECTION ── */
+    #quiz-section {
+      display: none;
+      width: 100%;
+      max-width: 660px;
+      position: relative;
+      margin: 0 auto;
+}
+
+    /* ── FLIP CARD ── */
+    .scene { width: 100%; perspective: 1200px; }
+
+    .flipper {
+      position: relative;
+      width: 100%;
+      min-height: 520px;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(.4,0,.2,1);
+    }
+
+    .flipper.flipped { transform: rotateY(180deg); }
+
+    .face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: var(--radius);
+      background: var(--white);
+      padding: 48px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: 6px 6px 0px var(--ink);
+      border: 2.5px solid var(--ink);
+    }
+
+    .face.back { transform: rotateY(180deg); background: var(--cream); }
+
+    .face::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 8px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .face.red-top::before    { background: var(--red); }
+    .face.yellow-top::before { background: var(--yellow); }
+    .face.blue-top::before   { background: var(--blue); }
+    .face.green-top::before  { background: var(--green); }
+
+    /* ── LEAVE BTN ── */
+    .leave-btn {
+      position: absolute;
+      top: 18px; right: 18px;
+      background: #f3f4f6;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 99px;
+      padding: 5px 14px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      z-index: 10;
+    }
+
+    .leave-btn:hover { background: #fee2e2; color: var(--red); border-color: var(--red); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26,26,46,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 100;
+    }
+
+    .modal-box {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 2.5px solid var(--ink);
+      box-shadow: 5px 5px 0 var(--ink);
+      padding: 36px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .modal-box .big { font-size: 3rem; display: block; margin-bottom: 12px; }
+    .modal-box h3   { font-family: 'Bangers', cursive; font-size: 1.8rem; letter-spacing: 0.04em; margin-bottom: 8px; }
+    .modal-box p    { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 24px; }
+
+    /* ── SHARED ── */
+    h2   { font-family: 'Bangers', cursive; font-size: 2rem; letter-spacing: 0.04em; margin-bottom: 10px; }
+    .sub { color: var(--muted); font-size: 1rem; line-height: 1.65; margin-bottom: 28px; font-weight: 600; }
+
+    .btn {
+      display: block; width: 100%; padding: 15px;
+      border-radius: 14px;
+      font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+      text-align: center;
+      border: 2.5px solid var(--ink);
+    }
+
+    .btn:active { transform: translate(3px,3px); box-shadow: none !important; }
+    .btn + .btn { margin-top: 10px; }
+    .btn-red    { background: var(--red);    color: white;      box-shadow: 4px 4px 0 var(--ink); }
+    .btn-yellow { background: var(--yellow); color: var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+    .btn-blue   { background: var(--blue);   color: white;      box-shadow: 4px 4px 0 var(--ink); }
+    .btn-ghost  { background: var(--white);  color: var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+
+    .progress-wrap  { margin-bottom: 28px; }
+    .progress-meta  { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; color: var(--muted); margin-bottom: 8px; }
+    .progress-track { background: #e5e7eb; border-radius: 99px; height: 10px; border: 1.5px solid var(--ink); }
+    .progress-fill  { background: var(--yellow); height: 100%; border-radius: 99px; transition: width 0.4s cubic-bezier(.4,0,.2,1); border-right: 1.5px solid var(--ink); }
+
+    .q-number { font-family: 'Bangers', cursive; font-size: 1rem; letter-spacing: 0.08em; color: var(--red); margin-bottom: 12px; }
+    .q-text   { font-size: 1.4rem; font-weight: 700; line-height: 1.45; margin-bottom: 32px; min-height: 80px; }
+
+    .scale-row { display: flex; gap: 10px; margin-bottom: 10px; }
+
+    .scale-btn {
+      flex: 1; padding: 16px 0;
+      border: 2.5px solid var(--ink); border-radius: 14px;
+      background: var(--white); cursor: pointer;
+      font-family: 'Bangers', cursive; font-size: 1.3rem; letter-spacing: 0.04em;
+      color: var(--ink);
+      transition: transform 0.12s, box-shadow 0.12s;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .scale-btn:hover  { background: var(--yellow); transform: translateY(-3px); box-shadow: 3px 6px 0 var(--ink); }
+    .scale-btn:active { transform: translate(2px,2px); box-shadow: none; }
+    .scale-btn.sel-1  { background: var(--red);    color: white;      transform: translateY(-3px); box-shadow: 3px 6px 0 var(--ink); }
+    .scale-btn.sel-2  { background: #FF8C42;       color: white;      transform: translateY(-3px); box-shadow: 3px 6px 0 var(--ink); }
+    .scale-btn.sel-3  { background: var(--yellow); color: var(--ink); transform: translateY(-3px); box-shadow: 3px 6px 0 var(--ink); }
+    .scale-btn.sel-4  { background: var(--green);  color: white;      transform: translateY(-3px); box-shadow: 3px 6px 0 var(--ink); }
+    .scale-btn.sel-5  { background: var(--blue);   color: white;      transform: translateY(-3px); box-shadow: 3px 6px 0 var(--ink); }
+    .scale-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); font-weight: 700; }
+
+    select {
+      width: 100%; padding: 14px 16px;
+      border: 2.5px solid var(--ink); border-radius: 14px;
+      font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700;
+      color: var(--ink); background: var(--white);
+      margin-bottom: 20px; appearance: none;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    select:focus { outline: none; }
+
+    .loading-wrap { text-align: center; padding: 48px 0; }
+    .spin { font-size: 4rem; display: block; margin-bottom: 20px; animation: spin 1.2s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-wrap p     { font-family: 'Bangers', cursive; font-size: 1.5rem; letter-spacing: 0.05em; }
+    .loading-wrap small { color: var(--muted); font-weight: 700; font-size: 0.85rem; }
+
+    .result-hero  { text-align: center; margin-bottom: 28px; }
+    .result-big   { font-size: 5rem; display: block; margin-bottom: 12px; animation: pop 0.45s cubic-bezier(.175,.885,.32,1.275); }
+    @keyframes pop { from { transform: scale(0.3); opacity:0; } to { transform: scale(1); opacity:1; } }
+
+    .result-title { font-family: 'Bangers', cursive; font-size: 2.6rem; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .result-title.firstborn { color: var(--blue); }
+    .result-title.laterborn { color: var(--red); }
+    .result-conf { font-size: 0.85rem; color: var(--muted); font-weight: 700; }
+
+    .prob-block { margin-bottom: 10px; }
+    .prob-row   { display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800; margin-bottom: 5px; }
+    .prob-track { background: #e5e7eb; border-radius: 99px; height: 10px; border: 1.5px solid var(--ink); overflow: hidden; }
+    .prob-bar   { height: 10px; border-radius: 99px; transition: width 0.9s cubic-bezier(.4,0,.2,1); }
+    .bar-blue   { background: var(--blue); }
+    .bar-red    { background: var(--red); }
+
+    .divider    { border: none; border-top: 2.5px dashed var(--ink); margin: 24px 0; opacity: 0.2; }
+    .feedback-q { font-family: 'Bangers', cursive; font-size: 1.5rem; letter-spacing: 0.04em; text-align: center; margin-bottom: 16px; }
+
+    .order-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .order-btn  {
+      padding: 16px 10px; border: 2.5px solid var(--ink); border-radius: 14px;
+      background: var(--white); cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 800;
+      transition: all 0.12s; text-align: center;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+    .order-btn:hover  { background: var(--yellow); transform: translateY(-2px); box-shadow: 3px 5px 0 var(--ink); }
+    .order-btn:active { transform: translate(2px,2px); box-shadow: none; }
+    .order-btn .ob-e  { font-size: 1.6rem; display: block; margin-bottom: 5px; }
+
+    .center { text-align: center; }
+    .big-e  { font-size: 4rem; display: block; margin-bottom: 12px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── LANDING ── -->
+  <div id="landing">
+    <!-- blank colored cards — peel off first (highest z-index) -->
+    <div class="stack-card" id="stack-1"></div>
+    <div class="stack-card" id="stack-2"></div>
+    <div class="stack-card" id="stack-3"></div>
+
+    <!-- main card — revealed last (lowest z-index) -->
+    <div class="stack-card main-card" id="stack-main">
+      <div class="landing-title">Were you born first?</div>
+      <p class="landing-sub">Answer a few questions and we'll predict your birth order. Think we can figure you out?</p>
+      <div class="badge-row">
+        <span class="badge badge-red">⏱ ~5 min</span>
+        <span class="badge badge-yellow">🧠 Personality quiz</span>
+      </div>
+      <button class="btn btn-red hidden" id="start-btn" onclick="startQuiz()">
+        Let's find out! 
+      </button>
+    </div>
+  </div>
+
+  <!-- ── QUIZ ── -->
+  <div id="quiz-section">
+    <button class="leave-btn hidden" id="leave-btn" onclick="confirmLeave()">✕ Leave</button>
+    <div class="scene">
+      <div class="flipper" id="flipper">
+        <div class="face red-top"        id="face-front"><div id="screen-content"></div></div>
+        <div class="face yellow-top back" id="face-back"><div id="back-content"></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LEAVE MODAL -->
+<div class="modal-overlay hidden" id="leave-modal">
+  <div class="modal-box">
+    <h3>Leave the quiz?</h3>
+    <p>Your progress will be lost and you'll go back to the start. Sure about that?</p>
+    <button class="btn btn-red"   onclick="doLeave()">Yes, leave</button>
+    <button class="btn btn-ghost" style="margin-top:10px" onclick="closeModal()">Keep going!</button>
+  </div>
+</div>
+
+<script>
+const FBPS = [
+  {id:"Q1",  text:"I am good at keeping track of multiple tasks."},
+  {id:"Q2",  text:"I feel responsible for the wellbeing of others."},
+  {id:"Q3",  text:"I often take charge in group situations."},
+  {id:"Q4",  text:"I tend to be well organized."},
+  {id:"Q5",  text:"I feel the need to set a good example for others."},
+  {id:"Q6",  text:"I am comfortable making decisions for others."},
+  {id:"Q7",  text:"I tend to be serious and goal oriented."},
+  {id:"Q8",  text:"I feel a strong sense of duty."},
+  {id:"Q9",  text:"I am good at mediating conflicts."},
+  {id:"Q10", text:"I tend to be a perfectionist."},
+  {id:"Q11", text:"I feel that I have to justify my actions to others."},
+  {id:"Q12", text:"I am good at taking care of others."},
+  {id:"Q13", text:"I tend to be conservative and conventional."},
+  {id:"Q14", text:"I feel comfortable in positions of authority."},
+  {id:"Q15", text:"I tend to plan ahead."},
+  {id:"Q16", text:"I feel a strong sense of loyalty to my family."},
+  {id:"Q17", text:"I tend to be reliable and dependable."},
+  {id:"Q18", text:"I feel the need to achieve and succeed."},
+  {id:"Q19", text:"I tend to be cautious and careful."},
+  {id:"Q20", text:"I feel responsible for solving problems."},
+  {id:"Q21", text:"I tend to be rebellious and unconventional."},
+  {id:"Q22", text:"I feel comfortable letting others take charge."},
+  {id:"Q23", text:"I tend to be spontaneous and impulsive."},
+  {id:"Q24", text:"I feel comfortable depending on others."},
+  {id:"Q25", text:"I tend to be laid back and relaxed."},
+];
+
+const BIG5 = [
+  {id:"EXT1",  text:"I am the life of the party."},
+  {id:"EXT2",  text:"I don't talk a lot."},
+  {id:"EXT3",  text:"I feel comfortable around people."},
+  {id:"EXT4",  text:"I keep in the background."},
+  {id:"EXT5",  text:"I start conversations."},
+  {id:"EXT6",  text:"I have little to say."},
+  {id:"EXT7",  text:"I talk to a lot of different people at parties."},
+  {id:"EXT8",  text:"I don't like to draw attention to myself."},
+  {id:"EXT9",  text:"I don't mind being the center of attention."},
+  {id:"EXT10", text:"I am quiet around strangers."},
+  {id:"EST1",  text:"I get stressed out easily."},
+  {id:"EST2",  text:"I am relaxed most of the time."},
+  {id:"EST3",  text:"I worry about things."},
+  {id:"EST4",  text:"I seldom feel blue."},
+  {id:"EST5",  text:"I am easily disturbed."},
+  {id:"EST6",  text:"I get upset easily."},
+  {id:"EST7",  text:"I change my mood a lot."},
+  {id:"EST8",  text:"I have frequent mood swings."},
+  {id:"EST9",  text:"I get irritated easily."},
+  {id:"EST10", text:"I often feel blue."},
+  {id:"AGR1",  text:"I feel little concern for others."},
+  {id:"AGR2",  text:"I am interested in people."},
+  {id:"AGR3",  text:"I insult people."},
+  {id:"AGR4",  text:"I sympathize with others' feelings."},
+  {id:"AGR5",  text:"I am not interested in other people's problems."},
+  {id:"AGR6",  text:"I have a soft heart."},
+  {id:"AGR7",  text:"I am not really interested in others."},
+  {id:"AGR8",  text:"I take time out for others."},
+  {id:"AGR9",  text:"I feel others' emotions."},
+  {id:"AGR10", text:"I make people feel at ease."},
+  {id:"CSN1",  text:"I am always prepared."},
+  {id:"CSN2",  text:"I leave my belongings around."},
+  {id:"CSN3",  text:"I pay attention to details."},
+  {id:"CSN4",  text:"I make a mess of things."},
+  {id:"CSN5",  text:"I get chores done right away."},
+  {id:"CSN6",  text:"I often forget to put things back in their proper place."},
+  {id:"CSN7",  text:"I like order."},
+  {id:"CSN8",  text:"I shirk my duties."},
+  {id:"CSN9",  text:"I follow a schedule."},
+  {id:"CSN10", text:"I am exacting in my work."},
+  {id:"OPN1",  text:"I have a rich vocabulary."},
+  {id:"OPN2",  text:"I have difficulty understanding abstract ideas."},
+  {id:"OPN3",  text:"I have a vivid imagination."},
+  {id:"OPN4",  text:"I am not interested in abstract ideas."},
+  {id:"OPN5",  text:"I have excellent ideas."},
+  {id:"OPN6",  text:"I do not have a good imagination."},
+  {id:"OPN7",  text:"I am quick to understand things."},
+  {id:"OPN8",  text:"I use difficult words."},
+  {id:"OPN9",  text:"I spend time reflecting on things."},
+  {id:"OPN10", text:"I am full of ideas."},
+];
+
+const ALL_QS = [...FBPS, ...BIG5];
+const TOTAL  = ALL_QS.length;
+
+let answers   = {};
+let current   = 0;
+let sessionId = null;
+let predicted = null;
+let isFlipped = false;
+
+// ── LANDING PEEL ──────────────────────────────────────────
+function runLandingAnimation() {
+  // reset all cards first
+  ["stack-1","stack-2","stack-3"].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.style.animation  = "";
+    el.style.opacity    = "1";
+    el.style.transform  = "";
+  });
+
+  const startBtn = document.getElementById("start-btn");
+  startBtn.classList.add("hidden");
+  startBtn.classList.remove("reveal-btn");
+
+  // stagger peel — card 1 (top, z-index 4) goes first
+  ["stack-1","stack-2","stack-3"].forEach((id, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      el.style.animation = `peel-off 0.55s cubic-bezier(.4,0,.2,1) forwards`;
+    }, i * 420);
+  });
+
+  // reveal start button after all 3 peel
+  setTimeout(() => {
+    startBtn.classList.remove("hidden");
+    startBtn.classList.add("reveal-btn");
+  }, 3 * 420 + 200);
+}
+
+// ── QUIZ START ────────────────────────────────────────────
+function startQuiz() {
+  document.getElementById("landing").style.display      = "none";
+  document.getElementById("quiz-section").style.display = "block";
+  answers = {};
+  current = 0;
+  isFlipped = false;
+  document.getElementById("flipper").classList.remove("flipped");
+  document.getElementById("flipper").style.transition = "none";
+  setTimeout(() => { document.getElementById("flipper").style.transition = ""; }, 50);
+  showQuestion();
+}
+
+// ── FLIP ENGINE ───────────────────────────────────────────
+const flipper      = document.getElementById("flipper");
+const frontFace    = document.getElementById("face-front");
+const backFace     = document.getElementById("face-back");
+const frontContent = document.getElementById("screen-content");
+const backContent  = document.getElementById("back-content");
+
+const accentMap = {
+  quiz:    "yellow-top",
+  country: "blue-top",
+  loading: "red-top",
+  result:  "blue-top",
+  wrong:   "red-top",
+  replay:  "yellow-top",
+  ty:      "green-top",
+};
+
+function flipTo(screenName, htmlContent) {
+  const accent          = accentMap[screenName] || "red-top";
+  const incomingFace    = isFlipped ? frontFace : backFace;
+  const incomingContent = isFlipped ? frontContent : backContent;
+
+  incomingFace.className    = (isFlipped ? "face " : "face back ") + accent;
+  incomingContent.innerHTML = htmlContent;
+
+  isFlipped = !isFlipped;
+  flipper.classList.toggle("flipped", isFlipped);
+
+  setTimeout(() => {
+    frontContent.innerHTML = htmlContent;
+    frontFace.className    = "face " + accent;
+    backContent.innerHTML  = "";
+    if (isFlipped) {
+      isFlipped = false;
+      flipper.classList.remove("flipped");
+      flipper.style.transition = "none";
+      setTimeout(() => { flipper.style.transition = ""; }, 50);
+    }
+  }, 560);
+
+  const showLeave = ["quiz","country"].includes(screenName);
+  document.getElementById("leave-btn").classList.toggle("hidden", !showLeave);
+}
+
+// ── SCREENS ───────────────────────────────────────────────
+function showQuestion() {
+  const q   = ALL_QS[current];
+  const pct = Math.round((current / TOTAL) * 100);
+  const scaleHTML = [1,2,3,4,5].map(n =>
+    `<button class="scale-btn ${answers[q.id]===n?'sel-'+n:''}"
+      onclick="pickAnswer('${q.id}',${n})">${n}</button>`
+  ).join("");
+
+  flipTo("quiz", `
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span>${pct}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${pct}%"></div>
+      </div>
+    </div>
+    <div></div>
+    <div class="q-text">${q.text}</div>
+    <div class="scale-row">${scaleHTML}</div>
+    <div class="scale-labels"><span>😬 Disagree</span><span>🙌 Agree</span></div>
+  `);
+}
+
+function pickAnswer(qId, val) {
+  answers[qId] = val;
+  document.querySelectorAll(".scale-btn").forEach((b, i) => {
+    b.className = "scale-btn" + (i + 1 === val ? ` sel-${val}` : "");
+  });
+  setTimeout(() => {
+    if (current < TOTAL - 1) { current++; showQuestion(); }
+    else { showCountry(); }
+  }, 320);
+}
+
+function showCountry() {
+  flipTo("country", `
+    <span style="font-size:3.5rem;display:block;margin-bottom:16px">🌍</span>
+    <h2>One last thing!</h2>
+    <p class="sub">Select the country you were born? </p>
+    <select id="country-sel">
+      <option value="">-- Pick your country --</option>
+      <option value="US">🇺🇸 United States</option>
+      <option value="GB">🇬🇧 United Kingdom</option>
+      <option value="CA">🇨🇦 Canada</option>
+      <option value="AU">🇦🇺 Australia</option>
+      <option value="IN">🇮🇳 India</option>
+      <option value="DE">🇩🇪 Germany</option>
+      <option value="FR">🇫🇷 France</option>
+      <option value="MY">🇲🇾 Malaysia</option>
+      <option value="PH">🇵🇭 Philippines</option>
+      <option value="ID">🇮🇩 Indonesia</option>
+      <option value="SE">🇸🇪 Sweden</option>
+      <option value="NZ">🇳🇿 New Zealand</option>
+      <option value="DK">🇩🇰 Denmark</option>
+      <option value="BR">🇧🇷 Brazil</option>
+      <option value="NO">🇳🇴 Norway</option>
+      <option value="SG">🇸🇬 Singapore</option>
+      <option value="JP">🇯🇵 Japan</option>
+      <option value="KR">🇰🇷 South Korea</option>
+      <option value="CN">🇨🇳 China</option>
+      <option value="MX">🇲🇽 Mexico</option>
+      <option value="OTHER">🌐 Other</option>
+    </select>
+    <button class="btn btn-blue" onclick="submitQuiz()">Read my mind 🔮</button>
+    <button class="btn btn-ghost" style="margin-top:10px" onclick="goBack()">← Back</button>
+  `);
+}
+
+function goBack() { current = TOTAL - 1; showQuestion(); }
+
+async function submitQuiz() {
+  const country = document.getElementById("country-sel").value;
+  if (!country) { alert("Please pick your country 🌍"); return; }
+
+  flipTo("loading", `
+    <div class="loading-wrap">
+      <span class="spin">🔮</span>
+      <p>Reading your personality...</p>
+      <small>Consulting the oracle ✨</small>
+    </div>
+  `);
+
+  try {
+    const res  = await fetch("/predict", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ answers, country })
+    });
+    const data = await res.json();
+    sessionId  = data.session_id;
+    predicted  = data.prediction;
+    setTimeout(() => showResult(data), 600);
+  } catch(e) {
+    alert("Something went wrong 😢 Try again!");
+    showCountry();
+  }
+}
+
+function showResult(data) {
+  const fb = data.prediction === "firstborn";
+  flipTo("result", `
+    <div class="result-hero">
+      <span class="result-big">${fb ? "👑" : "🌟"}</span>
+      <div class="result-title ${fb ? 'firstborn' : 'laterborn'}">${fb ? "You're a Firstborn!" : "You're a Later-born!"}</div>
+      <div class="result-conf">Confidence: ${data.confidence}%</div>
+    </div>
+    <div class="prob-block">
+      <div class="prob-row"><span>👑 Firstborn</span><span>${data.firstborn_probability}%</span></div>
+      <div class="prob-track"><div class="prob-bar bar-blue" style="width:${data.firstborn_probability}%"></div></div>
+    </div>
+    <div class="prob-block" style="margin-top:10px">
+      <div class="prob-row"><span>🌟 Later-born</span><span>${data.laterborn_probability}%</span></div>
+      <div class="prob-track"><div class="prob-bar bar-red" style="width:${data.laterborn_probability}%"></div></div>
+    </div>
+    <hr class="divider"/>
+    <div class="feedback-q">Did I get it right? 🤔</div>
+    <button class="btn btn-yellow" onclick="confirmCorrect()">✅ Yep, nailed it!</button>
+    <button class="btn btn-ghost"  onclick="showWrong()">❌ Nope, I'm different!</button>
+  `);
+}
+
+function showWrong() {
+  flipTo("wrong", `
+    <div class="center" style="margin-bottom:24px">
+      <span class="big-e">🙈</span>
+      <h2>What are you really?</h2>
+      <p class="sub">Help me learn — tap your actual birth order!</p>
+    </div>
+    <div class="order-grid">
+      <button class="order-btn" onclick="pickActual('firstborn')"><span class="ob-e">👑</span>Firstborn</button>
+      <button class="order-btn" onclick="pickActual('second')"><span class="ob-e">🥈</span>2nd Born</button>
+      <button class="order-btn" onclick="pickActual('third')"><span class="ob-e">🥉</span>3rd Born</button>
+      <button class="order-btn" onclick="pickActual('fourth_or_later')"><span class="ob-e">🎖️</span>4th or later</button>
+    </div>
+    <button class="btn btn-ghost" onclick="skipFeedback()">Skip, I'd rather not say</button>
+  `);
+}
+
+function showReplay() {
+  flipTo("replay", `
+    <div class="center">
+      <span class="big-e">😅</span>
+      <h2>I got that wrong!</h2>
+      <p class="sub">Personality is tricky! Want to try answering differently?</p>
+      <button class="btn btn-red"   onclick="replayQuiz()">🔄 Play again!</button>
+      <button class="btn btn-ghost" style="margin-top:10px" onclick="showThanks()">Nah, I'm good 👋</button>
+    </div>
+  `);
+}
+
+function showThanks() {
+  flipTo("ty", `
+    <div class="center">
+      <span class="big-e">🙏</span>
+      <h2>Thanks for playing!</h2>
+      <p class="sub">Your answers help the model get smarter. Come back and challenge it again!</p>
+      <button class="btn btn-red" onclick="backToLanding()">Play again 🎮</button>
+    </div>
+  `);
+}
+
+function backToLanding() {
+  document.getElementById("quiz-section").style.display = "none";
+  document.getElementById("landing").style.display      = "block";
+  setTimeout(runLandingAnimation, 200);
+}
+
+// ── FEEDBACK ─────────────────────────────────────────────
+async function confirmCorrect() {
+  await sendFeedback(predicted, true, false);
+  showThanks();
+}
+
+async function pickActual(actual) {
+  await sendFeedback(actual, false, false);
+  showReplay();
+}
+
+function skipFeedback() { showReplay(); }
+
+async function replayQuiz() {
+  await sendFeedback(predicted, false, true);
+  document.getElementById("quiz-section").style.display = "block";
+  answers = {};
+  current = 0;
+  isFlipped = false;
+  document.getElementById("flipper").classList.remove("flipped");
+  showQuestion();
+}
+
+async function sendFeedback(actual, confirmed, replayed) {
+  try {
+    await fetch("/feedback", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ session_id: sessionId, actual, confirmed, replayed })
+    });
+  } catch(e) { console.error(e); }
+}
+
+// ── LEAVE ────────────────────────────────────────────────
+function confirmLeave() { document.getElementById("leave-modal").classList.remove("hidden"); }
+function closeModal()   { document.getElementById("leave-modal").classList.add("hidden"); }
+
+function doLeave() {
+  closeModal();
+  backToLanding();
+}
+
+// ── INIT ─────────────────────────────────────────────────
+window.addEventListener("load", () => setTimeout(runLandingAnimation, 400));
+</script>
+</body>
+</html>
